@@ -45,6 +45,25 @@ python main.py --discover
 Historia ostatnich decyzji i zmian jest zapisywana w `logs/history.json`.
 Domyslnie program trzyma ostatnie 20 wpisow.
 
+## Prog temperatury
+
+Prog przelaczania ustawiasz w pliku `.env`:
+
+```env
+TEMP_THRESHOLD_C=16
+```
+
+Przy takim ustawieniu:
+
+- temperatura zewnetrzna `>= 16 C` ustawia `Tryb letni`
+- temperatura zewnetrzna `< 16 C` ustawia `Pompy rownolegle`
+
+Mozesz ustawic tez wartosc dziesietna, np.:
+
+```env
+TEMP_THRESHOLD_C=15.5
+```
+
 ## Harmonogram sprawdzania
 
 Mozesz wybrac jeden z dwoch sposobow pracy.
