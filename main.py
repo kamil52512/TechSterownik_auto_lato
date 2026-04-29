@@ -227,13 +227,14 @@ def find_outside_temperature(api: TechApi, module: dict[str, Any]) -> float:
         if "temperatura zewn" not in normalize_polish(label):
             continue
 
-        value = first_number_from_candidates(tile.get("params", {}), ("value", "currentTemp", "temperature"))
+        params = tile.get("params", {})
+        value = first_number_from_candidates(params, ("value", "currentTemp", "temperature"))
         if value is not None:
-            return value
+            return normalize_temperature_value(value, params)
 
         numbers = re.findall(r"-?\d+(?:[,.]\d+)?", json.dumps(tile, ensure_ascii=False))
         if numbers:
-            return float(numbers[-1].replace(",", "."))
+            return normalize_temperature_value(float(numbers[-1].replace(",", ".")), params)
 
     raise TechApiError("Nie znaleziono kafelka 'Temperatura zewnetrzna'")
 
@@ -343,6 +344,12 @@ def first_number_from_candidates(data: dict[str, Any], keys: tuple[str, ...]) ->
             if match:
                 return float(match.group(0).replace(",", "."))
     return None
+
+
+def normalize_temperature_value(value: float, params: dict[str, Any]) -> float:
+    if params.get("description") == "Temperature sensor":
+        return value / 10
+    return value
 
 
 def normalize_polish(value: str) -> str:
