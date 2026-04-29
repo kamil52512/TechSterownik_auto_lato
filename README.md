@@ -147,9 +147,9 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/opt/TechSterownik_auto_lato
-EnvironmentFile=/opt/TechSterownik_auto_lato/.env
-ExecStart=/opt/TechSterownik_auto_lato/.venv/bin/python /opt/TechSterownik_auto_lato/main.py
+WorkingDirectory=/home/ubuntu/TechSterownik_auto_lato
+EnvironmentFile=/home/ubuntu/TechSterownik_auto_lato/.env
+ExecStart=/home/ubuntu/TechSterownik_auto_lato/.venv/bin/python /home/ubuntu/TechSterownik_auto_lato/main.py
 Restart=always
 RestartSec=30
 
