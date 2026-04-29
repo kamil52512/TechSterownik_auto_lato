@@ -5,7 +5,7 @@ import logging
 import os
 import re
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Optional
 
@@ -28,6 +28,7 @@ class Settings:
     password: str
     threshold_c: float
     check_interval_seconds: int
+    schedule_minutes: tuple[int, ...]
     hysteresis_c: float
     history_file: Path
     history_limit: int
@@ -139,6 +140,7 @@ def load_settings() -> Settings:
         password=require_env("EMODUL_PASSWORD"),
         threshold_c=float(os.getenv("TEMP_THRESHOLD_C", "16")),
         check_interval_seconds=int(os.getenv("CHECK_INTERVAL_SECONDS", "1800")),
+        schedule_minutes=parse_schedule_minutes(os.getenv("SCHEDULE_MINUTES", "0,30")),
         hysteresis_c=float(os.getenv("HYSTERESIS_C", "0")),
         history_file=Path(os.getenv("HISTORY_FILE", "logs/history.json")),
         history_limit=int(os.getenv("HISTORY_LIMIT", "20")),
@@ -160,6 +162,35 @@ def empty_to_none(value: Optional[str]) -> Optional[str]:
 def parse_udid_from_url(url: str) -> Optional[str]:
     match = re.search(r"/web/([^/]+)/", url)
     return match.group(1) if match else None
+
+
+def parse_schedule_minutes(value: str) -> tuple[int, ...]:
+    minutes: set[int] = set()
+    for part in value.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        minute = int(part)
+        if minute < 0 or minute > 59:
+            raise ValueError("SCHEDULE_MINUTES moze zawierac tylko minuty 0-59")
+        minutes.add(minute)
+    return tuple(sorted(minutes))
+
+
+def seconds_until_next_run(settings: Settings) -> float:
+    if not settings.schedule_minutes:
+        return float(settings.check_interval_seconds)
+
+    now = datetime.now()
+    candidates = []
+    for minute in settings.schedule_minutes:
+        candidate = now.replace(minute=minute, second=0, microsecond=0)
+        if candidate <= now:
+            candidate += timedelta(hours=1)
+        candidates.append(candidate)
+
+    next_run = min(candidates)
+    return max(1.0, (next_run - now).total_seconds())
 
 
 async def main() -> None:
@@ -193,7 +224,9 @@ async def main() -> None:
                     },
                 )
 
-            await asyncio.sleep(settings.check_interval_seconds)
+            sleep_seconds = seconds_until_next_run(settings)
+            logging.info("Nastepne sprawdzenie za %.0f sekund", sleep_seconds)
+            await asyncio.sleep(sleep_seconds)
 
 
 async def resolve_module_udid(api: TechApi, settings: Settings) -> str:

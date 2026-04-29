@@ -24,6 +24,7 @@ EMODUL_PASSWORD=twoje-haslo
 EMODUL_API_URL=https://emodul.eu/api/v1/
 TEMP_THRESHOLD_C=16
 CHECK_INTERVAL_SECONDS=1800
+SCHEDULE_MINUTES=0,30
 HISTORY_FILE=logs/history.json
 HISTORY_LIMIT=20
 HYSTERESIS_C=0
@@ -43,6 +44,10 @@ python main.py --discover
 
 Historia ostatnich decyzji i zmian jest zapisywana w `logs/history.json`.
 Domyslnie program trzyma ostatnie 20 wpisow.
+
+`SCHEDULE_MINUTES=0,30` oznacza sprawdzanie o pelnej godzinie i w polowie godziny,
+np. `08:00`, `08:30`, `09:00`, `09:30`. Gdy `SCHEDULE_MINUTES` jest puste,
+program uzywa zwyklego interwalu `CHECK_INTERVAL_SECONDS`.
 
 ## Uruchomienie na serwerze Linux jako usluga
 
