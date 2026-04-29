@@ -1,0 +1,85 @@
+# TechSterownik auto lato
+
+Program cyklicznie loguje sie do eModul i kontroluje tryb pracy pieca:
+
+- temperatura zewnetrzna `>= 16 C` -> `Tryb letni`
+- temperatura zewnetrzna `< 16 C` -> `Pompy równoległe`
+
+## Uruchomienie lokalnie
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python -m playwright install chromium
+Copy-Item .env.example .env
+```
+
+W pliku `.env` ustaw:
+
+```env
+EMODUL_URL=https://emodul.pl/web/TWOJ_ID_STEROWNIKA/home
+EMODUL_EMAIL=twoj-email@example.com
+EMODUL_PASSWORD=twoje-haslo
+TEMP_THRESHOLD_C=16
+CHECK_INTERVAL_SECONDS=300
+HEADLESS=true
+HYSTERESIS_C=0
+```
+
+Start:
+
+```powershell
+python main.py
+```
+
+## Uruchomienie na serwerze Linux jako usluga
+
+```bash
+sudo apt update
+sudo apt install -y python3 python3-venv
+cd /opt/TechSterownik_auto_lato
+python3 -m venv .venv
+./.venv/bin/pip install -r requirements.txt
+./.venv/bin/python -m playwright install --with-deps chromium
+cp .env.example .env
+nano .env
+```
+
+Przykladowy plik `/etc/systemd/system/techsterownik-auto-lato.service`:
+
+```ini
+[Unit]
+Description=Automatyczna zmiana trybu pracy pieca eModul
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/TechSterownik_auto_lato
+EnvironmentFile=/opt/TechSterownik_auto_lato/.env
+ExecStart=/opt/TechSterownik_auto_lato/.venv/bin/python /opt/TechSterownik_auto_lato/main.py
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Wlaczenie uslugi:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now techsterownik-auto-lato
+sudo systemctl status techsterownik-auto-lato
+```
+
+Logi:
+
+```bash
+journalctl -u techsterownik-auto-lato -f
+```
+
+## Uwagi
+
+Pierwsze uruchomienie najlepiej zrobic z `HEADLESS=false`, zeby zobaczyc czy automatyczne logowanie i klikniecie trybu pasuja do aktualnego wygladu strony eModul. Jezeli strona ma inny formularz logowania albo inne przyciski, trzeba dopasowac selektory w `main.py`.
