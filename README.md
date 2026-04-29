@@ -4,6 +4,9 @@ Program został opracowany dla modułu Venmma ST-9721 współpracującego ze ste
 
 Do prawidłowego działania programu wymagane jest podłączenie sterownika do Internetu, posiadanie konta w serwisie eModul, przypisanie modułu Venmma ST-9721 do tego konta oraz podłączenie czujnika temperatury zewnętrznej do sterownika.
 
+EMODUL API:
+https://api-documentation.emodul.eu/
+
 Program cyklicznie loguje sie do API eModul i kontroluje tryb pracy pieca:
 
 - temperatura zewnetrzna `>= 16 C` -> `Tryb letni`
