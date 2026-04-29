@@ -1,6 +1,8 @@
 # TechSterownik auto lato
 
-Program został stworzony dla modułu Venmma ST-9721 (Sterownik ST-976) z powodu braku tryby automatycznego wyłączenia ogrzewania na podstawie temperatury zewnętrznej.
+Program został opracowany dla modułu Venmma ST-9721 współpracującego ze sterownikiem ST-976. Jego celem jest automatyczne wyłączanie centralnego ogrzewania poprzez przełączenie sterownika w Tryb Lato na podstawie temperatury zewnętrznej, ponieważ sterownik nie posiada takiej funkcji wbudowanej.
+
+Do prawidłowego działania programu wymagane jest podłączenie sterownika do Internetu oraz posiadanie konta w serwisie eModul, do którego przypisany jest moduł Venmma ST-9721.
 
 Program cyklicznie loguje sie do API eModul i kontroluje tryb pracy pieca:
 
