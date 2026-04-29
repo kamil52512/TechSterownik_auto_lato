@@ -45,9 +45,64 @@ python main.py --discover
 Historia ostatnich decyzji i zmian jest zapisywana w `logs/history.json`.
 Domyslnie program trzyma ostatnie 20 wpisow.
 
-`SCHEDULE_MINUTES=0,30` oznacza sprawdzanie o pelnej godzinie i w polowie godziny,
-np. `08:00`, `08:30`, `09:00`, `09:30`. Gdy `SCHEDULE_MINUTES` jest puste,
-program uzywa zwyklego interwalu `CHECK_INTERVAL_SECONDS`.
+## Harmonogram sprawdzania
+
+Mozesz wybrac jeden z dwoch sposobow pracy.
+
+### Wedlug zegara
+
+Ustaw `SCHEDULE_MINUTES`, np.:
+
+```env
+SCHEDULE_MINUTES=0,30
+```
+
+Program sprawdzi piec o pelnej godzinie i w polowie godziny:
+
+```text
+08:00
+08:30
+09:00
+09:30
+```
+
+Inne przyklady:
+
+```env
+SCHEDULE_MINUTES=15,45
+```
+
+czyli `08:15`, `08:45`, `09:15`, `09:45`.
+
+```env
+SCHEDULE_MINUTES=0
+```
+
+czyli raz na godzine, o pelnej godzinie.
+
+### Co zadany interwal
+
+Jezeli chcesz sprawdzac np. co 30 minut od uruchomienia programu, zostaw
+`SCHEDULE_MINUTES` puste:
+
+```env
+SCHEDULE_MINUTES=
+CHECK_INTERVAL_SECONDS=1800
+```
+
+Przyklady interwalu:
+
+```env
+CHECK_INTERVAL_SECONDS=300
+```
+
+co 5 minut.
+
+```env
+CHECK_INTERVAL_SECONDS=3600
+```
+
+co 1 godzine.
 
 ## Uruchomienie na serwerze Linux jako usluga
 
