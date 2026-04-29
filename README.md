@@ -1,5 +1,7 @@
 # TechSterownik auto lato
 
+Program został stworzony dla modułu Venmma ST-9721 (Sterownik ST-976) z powodu braku tryby automatycznego wyłączenia ogrzewania na podstawie temperatury zewnętrznej.
+
 Program cyklicznie loguje sie do API eModul i kontroluje tryb pracy pieca:
 
 - temperatura zewnetrzna `>= 16 C` -> `Tryb letni`
