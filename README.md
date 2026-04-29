@@ -3,7 +3,7 @@
 Program cyklicznie loguje sie do API eModul i kontroluje tryb pracy pieca:
 
 - temperatura zewnetrzna `>= 16 C` -> `Tryb letni`
-- temperatura zewnetrzna `< 16 C` -> `Pompy równoległe`
+- temperatura zewnetrzna `< 16 C` -> `Pompy rownolegle`
 
 ## Uruchomienie lokalnie
 
@@ -23,7 +23,9 @@ EMODUL_EMAIL=twoj-email@example.com
 EMODUL_PASSWORD=twoje-haslo
 EMODUL_API_URL=https://emodul.eu/api/v1/
 TEMP_THRESHOLD_C=16
-CHECK_INTERVAL_SECONDS=300
+CHECK_INTERVAL_SECONDS=1800
+HISTORY_FILE=logs/history.json
+HISTORY_LIMIT=20
 HYSTERESIS_C=0
 ```
 
@@ -38,6 +40,9 @@ Tryb diagnostyczny, bez zmiany ustawien:
 ```powershell
 python main.py --discover
 ```
+
+Historia ostatnich decyzji i zmian jest zapisywana w `logs/history.json`.
+Domyslnie program trzyma ostatnie 20 wpisow.
 
 ## Uruchomienie na serwerze Linux jako usluga
 
@@ -79,12 +84,21 @@ sudo systemctl enable --now techsterownik-auto-lato
 sudo systemctl status techsterownik-auto-lato
 ```
 
-Logi:
+Przydatne skrypty:
 
 ```bash
-journalctl -u techsterownik-auto-lato -f
+chmod +x scripts/*.sh
+./scripts/start.sh
+./scripts/stop.sh
+./scripts/restart.sh
+./scripts/status.sh
+./scripts/logs.sh
+./scripts/history.sh
+./scripts/discover.sh
 ```
+
+`logs.sh` pokazuje log systemd na zywo, a `history.sh` pokazuje ostatnie wpisy z `logs/history.json`.
 
 ## Uwagi
 
-Pierwsze uruchomienie najlepiej zrobic przez `python main.py --discover`. Program wypisze kafelki i menu wyboru z API, bez zmieniania ustawien. Dzieki temu mozna potwierdzic, ze API widzi kafelek `Temperatura zewnetrzna` oraz menu z opcjami `Tryb letni` i `Pompy równoległe`.
+Pierwsze uruchomienie najlepiej zrobic przez `python main.py --discover`. Program wypisze kafelki i menu wyboru z API, bez zmieniania ustawien. Dzieki temu mozna potwierdzic, ze API widzi kafelek `Temperatura zewnetrzna` oraz menu z opcjami `Tryb letni` i `Pompy rownolegle`.

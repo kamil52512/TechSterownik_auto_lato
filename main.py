@@ -5,6 +5,8 @@ import logging
 import os
 import re
 from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Optional
 
 import aiohttp
@@ -12,7 +14,7 @@ from dotenv import load_dotenv
 
 
 SUMMER_MODE = "Tryb letni"
-PARALLEL_PUMPS_MODE = "Pompy równoległe"
+PARALLEL_PUMPS_MODE = "Pompy rownolegle"
 MENU_TYPES = ("MU", "MI")
 CHOICE_TYPES = {11, 111, 112}
 
@@ -27,6 +29,8 @@ class Settings:
     threshold_c: float
     check_interval_seconds: int
     hysteresis_c: float
+    history_file: Path
+    history_limit: int
 
 
 class TechApiError(RuntimeError):
@@ -134,8 +138,10 @@ def load_settings() -> Settings:
         email=require_env("EMODUL_EMAIL"),
         password=require_env("EMODUL_PASSWORD"),
         threshold_c=float(os.getenv("TEMP_THRESHOLD_C", "16")),
-        check_interval_seconds=int(os.getenv("CHECK_INTERVAL_SECONDS", "300")),
+        check_interval_seconds=int(os.getenv("CHECK_INTERVAL_SECONDS", "1800")),
         hysteresis_c=float(os.getenv("HYSTERESIS_C", "0")),
+        history_file=Path(os.getenv("HISTORY_FILE", "logs/history.json")),
+        history_limit=int(os.getenv("HISTORY_LIMIT", "20")),
     )
 
 
@@ -177,8 +183,15 @@ async def main() -> None:
         while True:
             try:
                 await run_check(api, module_udid, settings)
-            except Exception:
+            except Exception as error:
                 logging.exception("Blad podczas kontroli trybu pracy")
+                append_history(
+                    settings,
+                    {
+                        "status": "error",
+                        "error": str(error),
+                    },
+                )
 
             await asyncio.sleep(settings.check_interval_seconds)
 
@@ -214,11 +227,32 @@ async def run_check(api: TechApi, module_udid: str, settings: Settings) -> None:
 
     if current_mode == wanted_mode:
         logging.info("Tryb jest poprawny, nie zmieniam ustawien")
+        append_history(
+            settings,
+            {
+                "status": "no_change",
+                "outside_temp_c": outside_temp,
+                "current_mode": current_mode,
+                "wanted_mode": wanted_mode,
+            },
+        )
         return
 
     menu_item, value = find_work_mode_menu_value(api, menus, wanted_mode)
     await api.set_menu_value(module_udid, menu_item["menuType"], int(menu_item["id"]), value)
     logging.info("Zmieniono tryb pracy na: %s", wanted_mode)
+    append_history(
+        settings,
+        {
+            "status": "changed",
+            "outside_temp_c": outside_temp,
+            "previous_mode": current_mode,
+            "new_mode": wanted_mode,
+            "menu_type": menu_item["menuType"],
+            "menu_id": int(menu_item["id"]),
+            "menu_value": value,
+        },
+    )
 
 
 def find_outside_temperature(api: TechApi, module: dict[str, Any]) -> float:
@@ -352,8 +386,35 @@ def normalize_temperature_value(value: float, params: dict[str, Any]) -> float:
     return value
 
 
+def append_history(settings: Settings, event: dict[str, Any]) -> None:
+    history_path = settings.history_file
+    history_path.parent.mkdir(parents=True, exist_ok=True)
+
+    history: list[dict[str, Any]] = []
+    if history_path.exists():
+        try:
+            history = json.loads(history_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            logging.warning("Nie udalo sie odczytac historii: %s", history_path)
+
+    history.append(
+        {
+            "time_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            **event,
+        }
+    )
+    history = history[-settings.history_limit :]
+    history_path.write_text(
+        json.dumps(history, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
 def normalize_polish(value: str) -> str:
-    translation = str.maketrans("ąćęłńóśźż", "acelnoszz")
+    translation = str.maketrans(
+        "\u0105\u0107\u0119\u0142\u0144\u00f3\u015b\u017a\u017c",
+        "acelnoszz",
+    )
     return value.translate(translation)
 
 
