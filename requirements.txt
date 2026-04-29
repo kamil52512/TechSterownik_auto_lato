@@ -1,2 +1,2 @@
-playwright==1.52.0
+aiohttp==3.11.18
 python-dotenv==1.1.0
