@@ -5,7 +5,7 @@ import logging
 import os
 import re
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
 
@@ -432,7 +432,7 @@ def append_history(settings: Settings, event: dict[str, Any]) -> None:
 
     history.append(
         {
-            "time_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "time": datetime.now().astimezone().isoformat(timespec="seconds"),
             **event,
         }
     )

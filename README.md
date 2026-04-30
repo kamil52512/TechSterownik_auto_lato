@@ -43,7 +43,8 @@ python main.py --discover
 ```
 
 Historia ostatnich decyzji i zmian jest zapisywana w `logs/history.json`.
-Domyslnie program trzyma ostatnie 20 wpisow.
+Domyslnie program trzyma ostatnie 20 wpisow. Czas wpisu jest zapisywany jako
+czas lokalny serwera razem z przesunieciem strefy, np. `2026-04-30T07:00:01+02:00`.
 
 ## Prog temperatury
 
