@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import aiohttp
 from dotenv import load_dotenv
@@ -32,6 +33,7 @@ class Settings:
     hysteresis_c: float
     history_file: Path
     history_limit: int
+    history_timezone: str
 
 
 class TechApiError(RuntimeError):
@@ -144,6 +146,7 @@ def load_settings() -> Settings:
         hysteresis_c=float(os.getenv("HYSTERESIS_C", "0")),
         history_file=Path(os.getenv("HISTORY_FILE", "logs/history.json")),
         history_limit=int(os.getenv("HISTORY_LIMIT", "20")),
+        history_timezone=os.getenv("HISTORY_TIMEZONE", "Europe/Warsaw"),
     )
 
 
@@ -432,7 +435,7 @@ def append_history(settings: Settings, event: dict[str, Any]) -> None:
 
     history.append(
         {
-            "time": datetime.now().astimezone().isoformat(timespec="seconds"),
+            "time": now_for_history(settings).isoformat(timespec="seconds"),
             **event,
         }
     )
@@ -441,6 +444,17 @@ def append_history(settings: Settings, event: dict[str, Any]) -> None:
         json.dumps(history, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
+
+
+def now_for_history(settings: Settings) -> datetime:
+    try:
+        return datetime.now(ZoneInfo(settings.history_timezone))
+    except ZoneInfoNotFoundError:
+        logging.warning(
+            "Nieznana strefa czasu HISTORY_TIMEZONE=%s, uzywam czasu lokalnego systemu",
+            settings.history_timezone,
+        )
+        return datetime.now().astimezone()
 
 
 def normalize_polish(value: str) -> str:
